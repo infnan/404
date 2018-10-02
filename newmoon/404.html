@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta charset="UTF-8">
+    <title>404 Not Found</title>
+    <style>
+        html, body {
+            background-color: #111;
+            overflow: hidden;
+            margin: 0;
+        }
+
+        #fps_div {
+            display: none;
+            position: fixed;
+            left: 0;
+            top: 0;
+        }
+
+        #fps {
+            font-size: smaller;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+<canvas id="playground">
+    404 Not Found
+</canvas>
+<div id="fps_div">
+    <span id="fps">FPS: 0</span>
+</div>
+<div style="display: none;">
+    <img id="moon" src="static/images/moon.png" />
+    <img id="star" src="static/images/star.png" />
+    <img id="star2" src="static/images/star2.png" />
+    <img id="star3" src="static/images/star3.png" />
+    <img id="star4" src="static/images/star4.png" />
+    <img id="star5" src="static/images/star5.png" />
+    <img id="fullmoon" src="static/images/fullmoon.png" />
+</div>
+<script type="text/javascript">
+
+function Star (options) {
+    this.x = options.x || 0;
+    this.y = options.y || 0;
+    this.size = options.size || 0;
+    this.angle = options.angle || 0;
+    this.context = options.context || null;
+    this.speed = options.speed || { mode: 'linear', x: 0, y: 0, angle: 0 };
+    this.image = options.image || null;
+    this.opacity = options.opacity || 1;
+    this.orbit = options.orbit || null;
+
+    if (options.image) {
+        this._canvas = document.createElement('canvas');
+        this._canvas.width = this.size | 0;
+        this._canvas.height = (options.image.height * this.size / options.image.width) | 0;
+        this._context = this._canvas.getContext('2d');
+        this._context.drawImage(options.image, 0, 0, this._canvas.width, this._canvas.height);
+    } else {
+        this.image = null;
+    }
+}
+
+Star.prototype.draw = function () {
+    if (this.context === null || this.image === null) {
+        return;
+    }
+
+    var width = this._canvas.width;
+    var height = this._canvas.height;
+
+    if (width <=0 || height <=0) {
+        return;
+    }
+
+    // 因为月亮是圆形的所以把坐标转成中心点
+    var posX = this.x + width / 2;
+    var posY = this.y + height / 2;
+
+    this.context.save();
+    this.context.globalAlpha = this.opacity;
+    this.context.translate(posX | 0, posY | 0);
+    this.context.rotate(this.angle * Math.PI / 180);
+    this.context.drawImage(this._canvas, -((width/2) | 0), -((height/2) | 0));
+    this.context.restore();
+};
+
+Star.prototype.move = function () {
+    if (this.speed) {
+        switch (this.speed.mode) {
+            case 'linear':
+                this._moveLinear();
+                break;
+            case 'oval':
+                this._moveOval();
+                break;
+        }
+    }
+};
+
+Star.prototype._moveLinear = function () {
+    this.x += this.speed.x;
+    if (this.x + this.size < 0) {
+        this.x = this.context.canvas.width;
+    } else if (this.x > this.context.canvas.width) {
+        this.x = -this.size;
+    }
+
+    this.y += this.speed.y;
+    if (this.y + this.size < 0) {
+        this.y = this.context.canvas.height;
+    } else if (this.y > this.context.canvas.height) {
+        this.y = -this.size;
+    }
+
+    this.angle += this.speed.angle;
+};
+
+Star.prototype._moveOval = function () {
+    var angle = this.orbit.angle || 0;
+    var baseAngle = this.orbit.baseAngle || 0;
+    var a = this.orbit.a || 0;
+    var b = this.orbit.b || 0;
+    var sinb = Math.sin(angle);
+    var cosb = Math.cos(angle);
+    var factor = a*b / Math.sqrt(a*a*sinb*sinb+b*b*cosb*cosb);
+
+    var x = (this.orbit.baseX || 0) + factor * Math.cos(angle + baseAngle) - this.size / 2;
+    var y = (this.orbit.baseY || 0) + factor * Math.sin(angle + baseAngle) - this.size / 2;
+
+    this.x = x;
+    this.y = y;
+    this.orbit.angle += this.speed.angle;
+    this.angle += this.speed.rotateAngle;
+};
+
+var moons = [];
+var stars = [];
+var fullmoon;
+
+var prevWidth, prevHeight;
+
+var canvas = document.getElementById('playground');
+var context = canvas.getContext('2d');
+var starCanvas = document.createElement('canvas');
+var starContext = starCanvas.getContext('2d');
+var moonCanvas = document.createElement('canvas');
+var moonContext = moonCanvas.getContext('2d');
+
+var doResize = function () {
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+
+    canvas.width = width;
+    canvas.height = height;
+    starCanvas.width = width;
+    starCanvas.height = height;
+    moonCanvas.width = width;
+    moonCanvas.height = height;
+};
+
+var doRedraw = function (redrawStar) {
+    var i;
+    if (redrawStar) {
+        starContext.fillStyle = '#111';
+        starContext.fillRect(0, 0, starCanvas.width, starCanvas.height);
+        for (i=0; i<stars.length; i++) {
+            stars[i].draw();
+        }
+    }
+    moonCanvas.width = moonCanvas.width;
+    for (i=0; i<moons.length; i++) {
+        moons[i].draw();
+    }
+
+    context.drawImage(starCanvas, 0, 0);
+    context.drawImage(moonCanvas, 0, 0);
+};
+
+var isInbound = function (x, y, size) {
+    // 判断是否在窗口内*可见*
+    return (x-size) >= 0 && x <= window.innerWidth && (y-size) >= 0 && y <= window.innerHeight;
+};
+
+var fps = 0;
+var now;
+var lastUpdate = Date.now();
+var fpsStandard = 60;
+
+var doLoop = function () {
+    now = Date.now();
+
+    var fpsThisFrame = 1000 / (now - lastUpdate);
+    fps += (fpsThisFrame - fps) / 1;
+    lastUpdate = now;
+
+    var i;
+    for (i=0; i<stars.length; i++) {
+        stars[i].move();
+    }
+    for (i=0; i<moons.length; i++) {
+        moons[i].move();
+    }
+
+    // 黄脸重置轨道
+    if ((fullmoon.orbit.angle > 7 || fullmoon.orbit.angle < -7) && !isInbound(fullmoon.x, fullmoon.y, fullmoon.size)) {
+        fullmoon.resetOrbit();
+    }
+
+    doRedraw(false);
+
+    document.getElementById('fps').textContent = 'FPS: ' + parseInt(fps);
+    //setTimeout(doLoop, 1000 / fpsStandard / (fpsStandard / fps));
+    requestAnimationFrame(doLoop);
+};
+
+var doInit = function () {
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+
+    var starImage = document.getElementById('star');
+    var moonImage = document.getElementById('moon');
+    var fullmoonImage = document.getElementById('fullmoon');
+
+    prevWidth = width;
+    prevHeight = height;
+
+    doResize();
+
+    var i;
+    var size;
+
+    // 随机生成星星
+    for (i = 0; i < width * height / 2000; i++) {
+        size = Math.random() * 10;
+        var star = new Star({
+            x: Math.random() * (width - size),
+            y: Math.random() * (height - size),
+            size: size,
+            angle: Math.random() * 360,
+            context: starContext,
+            image: starImage,
+            opacity: Math.random()
+        });
+        stars.push(star);
+    }
+    // 彩色星星
+    for (i = 2; i <= 5; i++) {
+    	var coloredStarImage = document.getElementById('star' + i);
+    	for (var j = 0; j < width * height / 50000; j++) {
+    		size = Math.random() * 8;
+	        var star = new Star({
+	            x: Math.random() * (width - size),
+	            y: Math.random() * (height - size),
+	            size: size,
+	            angle: Math.random() * 360,
+	            context: starContext,
+	            image: coloredStarImage,
+	            opacity: Math.random()
+	        });
+	        stars.push(star);
+    	}
+    }
+
+    // 自动调整星星位置
+    window.addEventListener('resize', function () {
+        var width = window.innerWidth;
+        var height = window.innerHeight;
+
+        doResize();
+
+        if (prevWidth !== 0 && prevHeight !== 0) {
+            for (var i=0; i<stars.length; i++) {
+                stars[i].x = stars[i].x / prevWidth * width;
+                stars[i].y = stars[i].y / prevHeight * height;
+            }
+        }
+
+        doRedraw(true);
+
+        prevWidth = width;
+        prevHeight = height;
+    });
+
+    // 随机生成若干个月亮，10% 概率为大月亮
+    var len = width * height / 25000;
+    if (len < 15) {
+        len = 15;
+    }
+    for (i = 0; i < len; i++) {
+        var coin = Math.random();
+        size = Math.random() * 50;
+        if (coin <= 0.1) {
+            size = Math.random() * 100 + 100;
+        }
+        var moon = new Star({
+            x: Math.random() * (width - size),
+            y: Math.random() * (height - size),
+            size: size,
+            angle: Math.random() * 360,
+            speed: {
+                mode: 'linear',
+                x: (Math.random() - 0.5),
+                y: (Math.random() - 0.5),
+                angle: (Math.random() - 0.5)
+            },
+            context: moonContext,
+            image: moonImage,
+            opacity: Math.random() * 0.1 + 0.9
+        });
+        moons.push(moon);
+    }
+
+    // 来一个沿椭圆轨道以恒定角速度旋转的黄脸
+    fullmoon = new Star({
+        x: -1000,
+        y: -1000,
+        size: Math.random() * 100 + 100,
+        angle: 0,
+        speed: {
+            mode: 'oval',
+            angle: 0,
+            rotateAngle: Math.random() - 0.5
+        },
+        context: moonContext,
+        image: fullmoonImage,
+        opacity: 1
+    });
+    moons.push(fullmoon);
+    fullmoon.resetOrbit = function () {
+        var alpha = Math.PI / 180 * (Math.random() - 0.5);
+        if (alpha < 0) {
+            alpha -= Math.PI / 180;
+        } else {
+            alpha += Math.PI / 180;
+        }
+        alpha /= 3;
+        fullmoon.speed.angle = alpha;
+        fullmoon.speed.rotateAngle = Math.random() - 0.5;
+
+        for (i = 0; i < 50; i++) {
+            var orbit = {
+                baseX: Math.random() * width,
+                baseY: Math.random() * height,
+                a: width * ((Math.random() - 0.5) * 0.2 + 0.6),
+                b: height * ((Math.random() - 0.5) * 0.2 + 0.6),
+                baseAngle: Math.PI / 6 * (Math.random() - 0.5),
+                angle: 0
+            };
+            fullmoon.orbit = orbit;
+            fullmoon.move();
+
+            if (!isInbound(fullmoon.x, fullmoon.y, fullmoon.size)) {
+                break;
+            }
+        }
+    };
+    fullmoon.resetOrbit();
+
+    doRedraw(true);
+    doLoop();
+};
+
+if (document.readyState === "complete" ||
+    (document.readyState !== "loading" && !document.documentElement.doScroll)) {
+    doInit();
+} else {
+    document.addEventListener("DOMContentLoaded", doInit, false);
+    window.addEventListener("load", doInit, false);
+}
+
+</script>
+</body>
