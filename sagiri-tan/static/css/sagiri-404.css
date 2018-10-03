@@ -1,3 +1,10 @@
+/**
+ * sagiri-404.css
+ */
+
+/**
+ * 宽屏 
+ */
 body {
 	background-color: #f6d3da;
 	margin: 0;
@@ -7,6 +14,7 @@ body {
 	background-repeat: repeat;
 }
 
+/* 页面居中 */
 .outer {
 	display: table;
 	position: absolute;
@@ -25,6 +33,7 @@ body {
 	width: 786px;
 }
 
+/* 外边框 */
 #box {
 	padding: 30px 0 0 30px;
 	background-color: #e4ecee;
@@ -39,11 +48,13 @@ body {
 	box-shadow: 0 0 7px #d8a4af;
 }
 
+/* 纱雾 */
 img.sagiri {
 	width: 300px;
 	vertical-align: top;
 }
 
+/* 气泡文字 */
 #box > .balloon {
 	display: inline-block;
 	margin-top: 20px;
@@ -94,13 +105,7 @@ img.sagiri {
 	position: absolute;
 }
 
-#box > .textbox > .title {
-	font-size: 50px;
-	padding-top: 70px;
-	color: #959b9c;
-	display: inline-block;
-}
-
+/* 文字部分 */
 #box > .textbox > .content {
 	line-height: 1.9;
 	color: #009fa8;
@@ -119,15 +124,18 @@ p.my-subtitle {
 	margin: 10px 0 0 0;
 }
 
+/* 按钮列表 */
 .content ul.button-list {
 	list-style-type: none;
 	padding-inline-start: 0;
+	padding-left: 0;
 }
 
 .content ul.button-list > li {
 	display: inline-block;
 }
 
+/* 按钮效果 */
 .btn {
 	color: #353535;
 	text-shadow: 0 1px 0 #fff;
@@ -216,6 +224,9 @@ p.my-subtitle {
 	box-shadow: 0 2px 1px rgba(0,0,0,.1);
 }
 
+/**
+ * 窄屏
+ */
 @media screen and (max-width: 900px) {
 	.inner {
 		width: 586px;
@@ -253,5 +264,136 @@ p.my-subtitle {
 	.content ul.button-list > li {
 		display: inline-block;
 		padding: 3px 0;
+	}
+}
+
+/**
+ * 屏幕->手机
+ */
+@media screen and (max-width: 640px) {
+	body {
+		background-size: 75%;
+	}
+
+	.inner-mobile-wrapper {
+		padding: 15px 0 10px 0px;
+		margin: 50px;
+		background-color: #e4ecee;
+		background-image: url(/static/images/pattern.png);
+		background-image: -webkit-image-set(url(/static/images/pattern.png) 1x, url(/static/images/pattern@2x.png) 2x);
+		background-image: image-set(url(/static/images/pattern.png) 1x, url(/static/images/pattern@2x.png) 2x);
+		background-repeat: repeat;
+		border: 3px solid #edb4c0;
+		border-radius: 20px;
+		box-shadow: 0 0 7px #d8a4af;
+	}
+	
+	.inner {
+		width: 320px;
+	}
+
+	#box {
+		width: 320px;
+		border: none;
+		border-radius: 0;
+		box-shadow: none;
+		background: none;
+		padding: 0;
+	}
+
+	img.sagiri {
+		margin-top: 130px;
+		width: 256px;
+	}
+
+	div.balloon {
+		margin-left: -280px;
+	}
+
+	div.balloon > .balloon-text > .my-title {
+		font-size: 24px;
+	}
+
+	div.balloon > .balloon-text > .my-subtitle {
+		font-size: 16px;
+	}
+
+	div.balloon > .balloon-arrow > .arrow {
+		border-width: 15px;
+		left: 120px;
+	}
+
+	div.balloon > .balloon-arrow > .arrow-2 {
+		border-width: 15px;
+		left: 120px;
+	}
+
+	#box > div.textbox {
+		padding: 0;
+		width: 280px;
+		display: inline-block;
+		position: relative;
+		margin-top: 10px;
+	}
+
+	#box > .textbox > .content {
+		line-height: 0.5;
+		padding-left: 15px;
+	}
+}
+
+/** 
+ * 手机
+ */
+@media screen and (max-width: 420px) {
+	.inner-mobile-wrapper {
+		margin: 30px;
+		border-radius: 15px;
+	}
+
+	#box,
+	.inner {
+		width: 250px;
+	}
+
+	img.sagiri {
+		width: 200px;
+		margin-top: 120px;
+	}
+
+	div.balloon {
+		margin-left: -230px;
+	}
+
+	div.balloon > .balloon-text {
+		line-height: 1;
+		border-radius: 15px;
+		padding: 15px;
+	}
+
+	div.balloon > .balloon-arrow > .arrow {
+		left: 100px;
+	}
+
+	div.balloon > .balloon-arrow > .arrow-2 {
+		left: 100px;
+	}
+
+	div.balloon > .balloon-text > .my-title {
+		font-size: 20px;
+	}
+
+	div.balloon > .balloon-text > .my-subtitle {
+		font-size: 14px;
+	}
+}
+
+/**
+ * iPhone 5 & SE
+ */
+@media screen and (max-width: 350px) {
+	.inner-mobile-wrapper {
+		margin: 15px;
+		padding: 0;
 	}
 }
